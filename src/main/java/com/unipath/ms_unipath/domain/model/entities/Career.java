@@ -26,6 +26,10 @@ public class Career {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Getter
+    @Column(name = "imageUrl", nullable = false)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "career", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UniversityCareer> universityCareers = new HashSet<>();
 
@@ -35,7 +39,7 @@ public class Career {
     public Career() {
     }
 
-    public Career(Long id, String name, String description) {
+    public Career(Long id, String name, String description, String imageUrl) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -44,5 +48,6 @@ public class Career {
     public Career(CreateCareerResource resource) {
         this.name = resource.name();
         this.description = resource.description();
+        this.imageUrl = resource.imageUrl();
     }
 }
