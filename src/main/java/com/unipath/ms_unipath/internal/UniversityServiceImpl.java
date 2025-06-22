@@ -6,6 +6,7 @@ import com.unipath.ms_unipath.repositories.UniversityRepository;
 import com.unipath.ms_unipath.rest.resources.university.CreateUniversityResource;
 import com.unipath.ms_unipath.rest.resources.university.UpdateUniversityResource;
 import com.unipath.ms_unipath.shared.domain.exceptions.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,7 @@ public class UniversityServiceImpl implements UniversityService {
 
     private final UniversityRepository universityRepository;
 
+    @Autowired
     public UniversityServiceImpl(UniversityRepository universityRepository) {
         this.universityRepository = universityRepository;
     }

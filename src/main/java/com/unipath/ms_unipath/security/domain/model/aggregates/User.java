@@ -28,6 +28,8 @@ public class User {
     private String email;
     @Column(nullable = false)
     private String password;
+    @Column(nullable = false)
+    private String school;
 
     @ManyToOne
     @JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false)
@@ -36,7 +38,7 @@ public class User {
     public User() {
     }
 
-    public User(Long id, String name, String lastName, LocalDate birthdate, String email, String password, Role role) {
+    public User(Long id, String name, String lastName, LocalDate birthdate, String email, String password, Role role, String school) {
         this.id = id;
         this.name = name;
         this.lastName = lastName;
@@ -44,6 +46,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.school = school;
     }
 
     public User(SignUpResource command, Role role, String password) {
@@ -52,6 +55,7 @@ public class User {
         this.birthdate = command.birthdate();
         this.email = command.email();
         this.password = password;
+        this.school = command.school();
         this.role = role;
     }
 

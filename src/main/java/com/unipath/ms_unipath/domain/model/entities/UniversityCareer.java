@@ -5,6 +5,7 @@ import lombok.Getter;
 
 @Entity
 @Table(name = "university_career")
+@Getter
 public class UniversityCareer {
 
     @Id
