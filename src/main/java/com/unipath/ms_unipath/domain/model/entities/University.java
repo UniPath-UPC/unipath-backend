@@ -30,7 +30,7 @@ public class University {
     private String imageUrl;
 
     @Getter
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Getter

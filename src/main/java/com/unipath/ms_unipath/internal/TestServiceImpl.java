@@ -11,6 +11,7 @@ import com.unipath.ms_unipath.rest.resources.DTOs.AnswerChasideDetailDTO;
 import com.unipath.ms_unipath.rest.resources.test.CreateTestResource;
 import com.unipath.ms_unipath.rest.resources.test.TestRequest;
 import com.unipath.ms_unipath.rest.resources.test.TestResource;
+import com.unipath.ms_unipath.rest.resources.test.TestResponse;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import com.unipath.ms_unipath.security.infrastructure.persistence.jpa.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,10 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -43,8 +48,13 @@ public class TestServiceImpl implements TestService {
     }
 
     @Override
-    public List<TestResource> getPredict (TestRequest request, Long user_id){
+    public TestResponse getPredict (TestRequest request, Long user_id){
+        //Hallamos los datos necesarios para guardar el Test
+        LocalDateTime fechaHoraActual = LocalDateTime.now();
         String interestDominant = evaluateChaside(request.listAnswers());
+        User user = userRepository.findById(user_id);
+
+        //Creamos el recurso con los datos del test
         CreateTestResource createTestResource = new CreateTestResource(
                 request.preferred_course_1(),
                 request.genre(),
@@ -58,30 +68,36 @@ public class TestServiceImpl implements TestService {
                 request.solution_level(),
                 request.communication_level(),
                 request.teamwork_level(),
-                request.monthly_cost()
+                request.monthly_cost(),
+                fechaHoraActual
                 );
 
-        User user = userRepository.findById(user_id);
-
+        //Generamos la Entidad y guardamos en la BD
         var newTest = new Test(createTestResource, user);
-
         testRepository.save(newTest);
 
+        //Obtenemos el test creado mediante el id
         Long testId = newTest.getId();
-
         Test testCreated = testRepository.findById(testId)
                 .orElseThrow(() -> new NoSuchElementException("Test con ID " + testId + " no encontrado"));
 
+        //Obtenemos la prediccion de la API externa
         List<TestResource> response =  externalApiCall(createTestResource);
 
+        //Relacionamos la carrera y el test en la BD
         for (TestResource t : response) {
             Career career = (Career) CareerRepository.findByName(t.nameCareer());
-
             TestCareer newTestCareer = new TestCareer(testCreated, career, Float.parseFloat(t.hitRate()));
-
             testCareerRepository.save(newTestCareer);
         }
-        return response;
+
+        TestResponse testResponse = new TestResponse(
+                response,
+                user.getName() + ' ' + user.getLastName(),
+                Period.between(user.getBirthdate(), LocalDate.from(fechaHoraActual)).getYears(),
+                testCreated.getFechaRegistro().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy HH:mm:ss"))
+        );
+        return testResponse;
     }
 
     @Override
@@ -101,19 +117,19 @@ public class TestServiceImpl implements TestService {
 
         for (AnswerChasideDetailDTO dto : chasideDetails){
             if (dto.getScore() == 1){
-                if (Arrays.asList(98,12,64,53,85,1,78,20,71,91,15,51,2,46).contains(dto.getScore())){
+                if (Arrays.asList(98,12,64,53,85,1,78,20,71,91,15,51,2,46).contains(dto.getId())){
                     conteoIntereses.put("C",conteoIntereses.get("C")+dto.getScore());
-                } else if (Arrays.asList(9,34,80,25,95,67,41,74,56,89,63,30,72,86).contains(dto.getScore())) {
+                } else if (Arrays.asList(9,34,80,25,95,67,41,74,56,89,63,30,72,86).contains(dto.getId())) {
                     conteoIntereses.put("H",conteoIntereses.get("H")+dto.getScore());
-                } else if (Arrays.asList(21,45,96,57,28,11,5,3,81,36,22,39,76,82).contains(dto.getScore())) {
+                } else if (Arrays.asList(21,45,96,57,28,11,50,3,81,36,22,39,76,82).contains(dto.getId())) {
                     conteoIntereses.put("A",conteoIntereses.get("A")+dto.getScore());
-                } else if (Arrays.asList(33,92,70,8,87,62,23,44,16,52,69,40,29,4).contains(dto.getScore())) {
+                } else if (Arrays.asList(33,92,70,8,87,62,23,44,16,52,69,40,29,4).contains(dto.getId())) {
                     conteoIntereses.put("S",conteoIntereses.get("S")+dto.getScore());
-                } else if (Arrays.asList(75,6,19,38,60,27,83,54,47,97,26,59,90,10).contains(dto.getScore())) {
+                } else if (Arrays.asList(75,6,19,38,60,27,83,54,47,97,26,59,90,10).contains(dto.getId())) {
                     conteoIntereses.put("I",conteoIntereses.get("I")+dto.getScore());
-                } else if (Arrays.asList(84,31,48,73,5,65,14,37,58,24,13,66,18,43).contains(dto.getScore())) {
+                } else if (Arrays.asList(84,31,48,73,5,65,14,37,58,24,13,66,18,43).contains(dto.getId())) {
                     conteoIntereses.put("D",conteoIntereses.get("D")+dto.getScore());
-                } else if (Arrays.asList(77,42,88,17,93,32,68,49,35,61,94,7,79,55).contains(dto.getScore())) {
+                } else if (Arrays.asList(77,42,88,17,93,32,68,49,35,61,94,7,79,55).contains(dto.getId())) {
                     conteoIntereses.put("E",conteoIntereses.get("E")+dto.getScore());
                 } else {
                     System.out.println("Advertencia: ID de pregunta " + dto.getId() + " no mapeado a ningún interés conocido.");
@@ -142,22 +158,24 @@ public class TestServiceImpl implements TestService {
     @Override
     public List<TestResource> externalApiCall (CreateTestResource resource){
         try {
+            //Creamos el recurso HTTP que se conectara a la API externa
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
             HttpEntity<CreateTestResource> request = new HttpEntity<>(resource, headers);
 
+            // Inicializamos el tipo de dato que reciba la respuesta del API
             ParameterizedTypeReference<List<TestResource>> responseType =
                     new ParameterizedTypeReference<List<TestResource>>() {};
 
-            // 3. Make the POST request
+            //Realizamos la solicitud al API REST con los parametros creados
             ResponseEntity<List<TestResource>> response = restTemplate.exchange(
-                    externalApiUrl,            // The URL
-                    HttpMethod.POST,   // The HTTP method (POST in this case)
-                    request,     // The request entity (body + headers)
-                    responseType       // The ParameterizedTypeReference for the response body
+                    externalApiUrl,
+                    HttpMethod.POST,
+                    request,
+                    responseType
             );
 
+            //Imprimimos en consola en caso de recibir un estado exitoso y retornamos lo obtenido
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 System.out.println("Respuesta de API externa: " + response.getBody());
                 return response.getBody();
@@ -168,7 +186,7 @@ public class TestServiceImpl implements TestService {
         } catch (Exception e) {
             System.err.println("Excepción al consumir API externa: " + e.getMessage());
             e.printStackTrace();
-            return null; // O lanzar una excepción
+            return null;
         }
     }
 }

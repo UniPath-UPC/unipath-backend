@@ -5,6 +5,7 @@ import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -69,6 +70,10 @@ public class Test {
     @Column(name = "monthly_cost", nullable = false)
     private Float monthly_cost;
 
+    @Getter
+    @Column(name = "fecha_registro", nullable = false)
+    private LocalDateTime fechaRegistro;
+
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TestCareer> testCareers = new HashSet<>();
 
@@ -94,5 +99,6 @@ public class Test {
         this.teamwork_level = testResource.teamwork_level();
         this.monthly_cost = testResource.monthly_cost();
         this.user = user;
+        this.fechaRegistro = testResource.fechaRegistro();
     }
 }

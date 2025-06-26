@@ -4,6 +4,7 @@ import com.unipath.ms_unipath.domain.services.TestService;
 import com.unipath.ms_unipath.repositories.TestRepository;
 import com.unipath.ms_unipath.rest.resources.test.TestRequest;
 import com.unipath.ms_unipath.rest.resources.test.TestResource;
+import com.unipath.ms_unipath.rest.resources.test.TestResponse;
 import com.unipath.ms_unipath.rest.resources.university.UniversityResource;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -27,8 +28,8 @@ public class TestController {
     }
 
     @PostMapping("/{user_id}")
-    ResponseEntity<List<TestResource>> predictTest(@RequestBody TestRequest testResource, @PathVariable Long user_id) {
-        List<TestResource> testRespond = testService.getPredict(testResource,user_id);
+    ResponseEntity<TestResponse> predictTest(@RequestBody TestRequest testResource, @PathVariable Long user_id) {
+        TestResponse testRespond = testService.getPredict(testResource,user_id);
 
         return new ResponseEntity<>(testRespond, HttpStatus.OK);
     }
