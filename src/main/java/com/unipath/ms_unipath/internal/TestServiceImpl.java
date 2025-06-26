@@ -117,19 +117,19 @@ public class TestServiceImpl implements TestService {
 
         for (AnswerChasideDetailDTO dto : chasideDetails){
             if (dto.getScore() == 1){
-                if (Arrays.asList(98,12,64,53,85,1,78,20,71,91,15,51,2,46).contains(dto.getId())){
+                if (Arrays.asList(98,12,64,53,85,1,78,20,71,91,15,51,2,46).contains(dto.getId().intValue())){
                     conteoIntereses.put("C",conteoIntereses.get("C")+dto.getScore());
-                } else if (Arrays.asList(9,34,80,25,95,67,41,74,56,89,63,30,72,86).contains(dto.getId())) {
+                } else if (Arrays.asList(9,34,80,25,95,67,41,74,56,89,63,30,72,86).contains(dto.getId().intValue())) {
                     conteoIntereses.put("H",conteoIntereses.get("H")+dto.getScore());
-                } else if (Arrays.asList(21,45,96,57,28,11,50,3,81,36,22,39,76,82).contains(dto.getId())) {
+                } else if (Arrays.asList(21,45,96,57,28,11,50,3,81,36,22,39,76,82).contains(dto.getId().intValue())) {
                     conteoIntereses.put("A",conteoIntereses.get("A")+dto.getScore());
-                } else if (Arrays.asList(33,92,70,8,87,62,23,44,16,52,69,40,29,4).contains(dto.getId())) {
+                } else if (Arrays.asList(33,92,70,8,87,62,23,44,16,52,69,40,29,4).contains(dto.getId().intValue())) {
                     conteoIntereses.put("S",conteoIntereses.get("S")+dto.getScore());
-                } else if (Arrays.asList(75,6,19,38,60,27,83,54,47,97,26,59,90,10).contains(dto.getId())) {
+                } else if (Arrays.asList(75,6,19,38,60,27,83,54,47,97,26,59,90,10).contains(dto.getId().intValue())) {
                     conteoIntereses.put("I",conteoIntereses.get("I")+dto.getScore());
-                } else if (Arrays.asList(84,31,48,73,5,65,14,37,58,24,13,66,18,43).contains(dto.getId())) {
+                } else if (Arrays.asList(84,31,48,73,5,65,14,37,58,24,13,66,18,43).contains(dto.getId().intValue())) {
                     conteoIntereses.put("D",conteoIntereses.get("D")+dto.getScore());
-                } else if (Arrays.asList(77,42,88,17,93,32,68,49,35,61,94,7,79,55).contains(dto.getId())) {
+                } else if (Arrays.asList(77,42,88,17,93,32,68,49,35,61,94,7,79,55).contains(dto.getId().intValue())) {
                     conteoIntereses.put("E",conteoIntereses.get("E")+dto.getScore());
                 } else {
                     System.out.println("Advertencia: ID de pregunta " + dto.getId() + " no mapeado a ningún interés conocido.");
@@ -137,12 +137,13 @@ public class TestServiceImpl implements TestService {
             }
         }
 
-        if (conteoIntereses.isEmpty()) {
-            return "No se pudo determinar el interés (no hay votos 'Sí' válidos o preguntas mapeadas).";
+        int sumaTotal = conteoIntereses.values().stream().mapToInt(Integer::intValue).sum();
+        if (sumaTotal == 0) {
+            return "No se pudo determinar el interés (no se reconocieron respuestas válidas)";
         }
 
         String interesPrincipal = null;
-        int maxVotos = -1;
+        int maxVotos = 0;
 
         for (Map.Entry<String, Integer> entry : conteoIntereses.entrySet()) {
             if (entry.getValue() > maxVotos) {
@@ -151,6 +152,7 @@ public class TestServiceImpl implements TestService {
             }
         }
 
+        System.out.println("Conteo de intereses: " + conteoIntereses);
         return interesPrincipal;
 
     }

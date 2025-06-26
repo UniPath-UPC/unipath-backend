@@ -1,22 +1,19 @@
 package com.unipath.ms_unipath.rest.resources.DTOs;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class AnswerChasideDetailDTO {
-    // Getters y Setters
-    private Long id;
-    private int score; // Puntuación de la respuesta (ej. 1 para "Sí", 0 para "No")
+    private Long id;            // ID real de la pregunta (usado para Chaside)
+    private int score;          // 1 si marcó "Sí", 0 si "No"
+    private Long questionId;    // (opcional) otro campo si quieres conservarlo
 
-    // Constructores
     public AnswerChasideDetailDTO() {}
 
     public AnswerChasideDetailDTO(Long id, int score) {
         this.id = id;
         this.score = score;
     }
-
-    public void setQuestionId(Long id) { this.id = id; }
-
-    public void setScore(int score) { this.score = score; }
 }
