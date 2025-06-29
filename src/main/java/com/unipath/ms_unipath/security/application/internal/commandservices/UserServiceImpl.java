@@ -61,4 +61,10 @@ public class UserServiceImpl implements UserService {
             throw new ServerErrorException();
         }
     }
+
+    @Override
+    public User getUserById(Long userId){
+        User user = userRepository.findById(userId);
+        return user;
+    }
 }

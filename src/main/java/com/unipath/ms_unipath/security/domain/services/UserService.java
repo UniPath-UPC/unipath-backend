@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface UserService {
     Optional<User> signIn(SignInResource resource);
     Optional<User> signUp(SignUpResource resource);
+    User getUserById(Long userId);
 }

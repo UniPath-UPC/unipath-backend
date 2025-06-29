@@ -58,5 +58,4 @@ public class User {
         this.school = command.school();
         this.role = role;
     }
-
 }
