@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TestServiceImpl implements TestService {
@@ -62,7 +63,8 @@ public class TestServiceImpl implements TestService {
                 request.preferred_course_3(),
                 request.district(),
                 request.type_school(),
-                interestDominant,
+                String.valueOf(interestDominant.charAt(0)),
+                String.valueOf(interestDominant.charAt(1)),
                 request.empathy_level(),
                 request.listen_level(),
                 request.solution_level(),
@@ -101,60 +103,61 @@ public class TestServiceImpl implements TestService {
     }
 
     @Override
-    public String evaluateChaside (List<AnswerChasideDetailDTO> chasideDetails){
-        if (chasideDetails == null || chasideDetails.isEmpty()){
+    public String evaluateChaside(List<AnswerChasideDetailDTO> chasideDetails) {
+        if (chasideDetails == null || chasideDetails.isEmpty()) {
             return "No se proporcionaron respuestas para el test Chaside";
         }
 
-        Map<String, Integer> conteoIntereses = new HashMap<String, Integer>();
-        conteoIntereses.put("C",0);
-        conteoIntereses.put("H",0);
-        conteoIntereses.put("A",0);
-        conteoIntereses.put("S",0);
-        conteoIntereses.put("I",0);
-        conteoIntereses.put("D",0);
-        conteoIntereses.put("E",0);
+        Map<String, Integer> conteoIntereses = new HashMap<>();
+        conteoIntereses.put("C", 0);
+        conteoIntereses.put("H", 0);
+        conteoIntereses.put("A", 0);
+        conteoIntereses.put("S", 0);
+        conteoIntereses.put("I", 0);
+        conteoIntereses.put("D", 0);
+        conteoIntereses.put("E", 0);
 
-        for (AnswerChasideDetailDTO dto : chasideDetails){
-            if (dto.getScore() == 1){
-                if (Arrays.asList(98,12,64,53,85,1,78,20,71,91,15,51,2,46).contains(dto.getId().intValue())){
-                    conteoIntereses.put("C",conteoIntereses.get("C")+dto.getScore());
-                } else if (Arrays.asList(9,34,80,25,95,67,41,74,56,89,63,30,72,86).contains(dto.getId().intValue())) {
-                    conteoIntereses.put("H",conteoIntereses.get("H")+dto.getScore());
-                } else if (Arrays.asList(21,45,96,57,28,11,50,3,81,36,22,39,76,82).contains(dto.getId().intValue())) {
-                    conteoIntereses.put("A",conteoIntereses.get("A")+dto.getScore());
-                } else if (Arrays.asList(33,92,70,8,87,62,23,44,16,52,69,40,29,4).contains(dto.getId().intValue())) {
-                    conteoIntereses.put("S",conteoIntereses.get("S")+dto.getScore());
-                } else if (Arrays.asList(75,6,19,38,60,27,83,54,47,97,26,59,90,10).contains(dto.getId().intValue())) {
-                    conteoIntereses.put("I",conteoIntereses.get("I")+dto.getScore());
-                } else if (Arrays.asList(84,31,48,73,5,65,14,37,58,24,13,66,18,43).contains(dto.getId().intValue())) {
-                    conteoIntereses.put("D",conteoIntereses.get("D")+dto.getScore());
-                } else if (Arrays.asList(77,42,88,17,93,32,68,49,35,61,94,7,79,55).contains(dto.getId().intValue())) {
-                    conteoIntereses.put("E",conteoIntereses.get("E")+dto.getScore());
+        for (AnswerChasideDetailDTO dto : chasideDetails) {
+            if (dto.getScore() == 1) {
+                int id = dto.getId().intValue();
+                if (Arrays.asList(98,12,64,53,85,1,78,20,71,91,15,51,2,46).contains(id)) {
+                    conteoIntereses.put("C", conteoIntereses.get("C") + 1);
+                } else if (Arrays.asList(9,34,80,25,95,67,41,74,56,89,63,30,72,86).contains(id)) {
+                    conteoIntereses.put("H", conteoIntereses.get("H") + 1);
+                } else if (Arrays.asList(21,45,96,57,28,11,50,3,81,36,22,39,76,82).contains(id)) {
+                    conteoIntereses.put("A", conteoIntereses.get("A") + 1);
+                } else if (Arrays.asList(33,92,70,8,87,62,23,44,16,52,69,40,29,4).contains(id)) {
+                    conteoIntereses.put("S", conteoIntereses.get("S") + 1);
+                } else if (Arrays.asList(75,6,19,38,60,27,83,54,47,97,26,59,90,10).contains(id)) {
+                    conteoIntereses.put("I", conteoIntereses.get("I") + 1);
+                } else if (Arrays.asList(84,31,48,73,5,65,14,37,58,24,13,66,18,43).contains(id)) {
+                    conteoIntereses.put("D", conteoIntereses.get("D") + 1);
+                } else if (Arrays.asList(77,42,88,17,93,32,68,49,35,61,94,7,79,55).contains(id)) {
+                    conteoIntereses.put("E", conteoIntereses.get("E") + 1);
                 } else {
-                    System.out.println("Advertencia: ID de pregunta " + dto.getId() + " no mapeado a ningún interés conocido.");
+                    System.out.println("Advertencia: ID de pregunta " + id + " no mapeado a ningún interés conocido.");
                 }
             }
         }
 
-        int sumaTotal = conteoIntereses.values().stream().mapToInt(Integer::intValue).sum();
+        // Anular el valor del interés "D"
+        conteoIntereses.put("D", 0);
+
+        // Ordenar por valor descendente y tomar los dos primeros
+        List<Map.Entry<String, Integer>> ordenados = conteoIntereses.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .collect(Collectors.toList());
+
+        int sumaTotal = ordenados.stream().mapToInt(Map.Entry::getValue).sum();
         if (sumaTotal == 0) {
             return "No se pudo determinar el interés (no se reconocieron respuestas válidas)";
         }
 
-        String interesPrincipal = null;
-        int maxVotos = 0;
-
-        for (Map.Entry<String, Integer> entry : conteoIntereses.entrySet()) {
-            if (entry.getValue() > maxVotos) {
-                maxVotos = entry.getValue();
-                interesPrincipal = entry.getKey();
-            }
-        }
+        String interes1 = ordenados.get(0).getKey();
+        String interes2 = ordenados.get(1).getKey();
 
         System.out.println("Conteo de intereses: " + conteoIntereses);
-        return interesPrincipal;
-
+        return interes1 + interes2; // Retorna concatenados, como "IC"
     }
 
     @Override

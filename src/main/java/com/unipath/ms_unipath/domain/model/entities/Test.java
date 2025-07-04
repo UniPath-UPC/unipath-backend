@@ -47,6 +47,11 @@ public class Test {
     private String area;
 
     @Getter
+    @Column(name = "area2", nullable = false)
+    private String area2;
+
+
+    @Getter
     @Column(name = "empathy_level", nullable = false)
     private Integer empathy_level;
 
@@ -92,6 +97,7 @@ public class Test {
         this.district = testResource.district();
         this.type_school = testResource.type_school();
         this.area = testResource.area();
+        this.area2 = testResource.area2();
         this.empathy_level = testResource.empathy_level();
         this.listen_level = testResource.listen_level();
         this.solution_level = testResource.solution_level();
