@@ -1,5 +1,8 @@
 package com.unipath.ms_unipath.security.domain.model.aggregates;
 
+import com.unipath.ms_unipath.domain.model.entities.University;
+import com.unipath.ms_unipath.rest.resources.university.UpdateUniversityResource;
+import com.unipath.ms_unipath.rest.resources.user.UpdateUserResource;
 import com.unipath.ms_unipath.security.domain.model.entities.Role;
 import com.unipath.ms_unipath.security.interfaces.rest.resources.SignUpResource;
 import jakarta.persistence.*;
@@ -57,5 +60,16 @@ public class User {
         this.password = password;
         this.school = command.school();
         this.role = role;
+    }
+
+    public User update (UpdateUserResource resource, String password) {
+        this.name = resource.name();
+        this.lastName = resource.lastName();
+        this.birthdate = resource.birthdate();
+        this.email = resource.email();
+        this.password = password;
+        this.school = resource.school();
+
+        return this;
     }
 }

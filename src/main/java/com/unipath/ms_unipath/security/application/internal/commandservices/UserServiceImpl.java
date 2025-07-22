@@ -1,5 +1,6 @@
 package com.unipath.ms_unipath.security.application.internal.commandservices;
 
+import com.unipath.ms_unipath.rest.resources.user.UpdateUserResource;
 import com.unipath.ms_unipath.security.application.internal.outboundservices.hashing.HashingService;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import com.unipath.ms_unipath.security.domain.services.UserService;
@@ -66,5 +67,21 @@ public class UserServiceImpl implements UserService {
     public User getUserById(Long userId){
         User user = userRepository.findById(userId);
         return user;
+    }
+
+    @Override
+    public User updateUser(Long userId, UpdateUserResource resource){
+        var foundedUser =  this.userRepository.findById(userId);
+
+        var updateUser = foundedUser.update(resource, hashingService.encode(resource.password()));
+
+        return userRepository.save(updateUser);
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        var foundedUser =  this.userRepository.findById(userId);
+
+        userRepository.delete(foundedUser);
     }
 }
