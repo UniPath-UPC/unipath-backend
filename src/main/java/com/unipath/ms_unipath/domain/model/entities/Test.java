@@ -82,9 +82,14 @@ public class Test {
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TestCareer> testCareers = new HashSet<>();
 
+    @Getter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Getter
+    @Column(name = "flg_favorites", nullable = false)
+    private Integer flg_favorites;
 
     public Test(){
     }
@@ -106,5 +111,6 @@ public class Test {
         this.monthly_cost = testResource.monthly_cost();
         this.user = user;
         this.fechaRegistro = testResource.fechaRegistro();
+        this.flg_favorites = 0;
     }
 }

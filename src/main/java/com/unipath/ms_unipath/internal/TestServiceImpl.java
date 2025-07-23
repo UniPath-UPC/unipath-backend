@@ -8,10 +8,7 @@ import com.unipath.ms_unipath.repositories.CareerRepository;
 import com.unipath.ms_unipath.repositories.TestCareerRepository;
 import com.unipath.ms_unipath.repositories.TestRepository;
 import com.unipath.ms_unipath.rest.resources.DTOs.AnswerChasideDetailDTO;
-import com.unipath.ms_unipath.rest.resources.test.CreateTestResource;
-import com.unipath.ms_unipath.rest.resources.test.TestRequest;
-import com.unipath.ms_unipath.rest.resources.test.TestResource;
-import com.unipath.ms_unipath.rest.resources.test.TestResponse;
+import com.unipath.ms_unipath.rest.resources.test.*;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import com.unipath.ms_unipath.security.infrastructure.persistence.jpa.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +33,7 @@ public class TestServiceImpl implements TestService {
     private final RestTemplate restTemplate;
     private final TestRepository testRepository;
     private final UserRepository userRepository;
-    private final CareerRepository CareerRepository;
+    private final CareerRepository careerRepository;
     private final TestCareerRepository testCareerRepository;
 
     @Autowired
@@ -44,7 +41,7 @@ public class TestServiceImpl implements TestService {
         this.restTemplate = restTemplate;
         this.testRepository = testRepository;
         this.userRepository = userRepository;
-        CareerRepository = careerRepository;
+        this.careerRepository = careerRepository;
         this.testCareerRepository = testCareerRepository;
     }
 
@@ -88,7 +85,7 @@ public class TestServiceImpl implements TestService {
 
         //Relacionamos la carrera y el test en la BD
         for (TestResource t : response) {
-            Career career = (Career) CareerRepository.findByName(t.nameCareer());
+            Career career = (Career) careerRepository.findByName(t.nameCareer());
             TestCareer newTestCareer = new TestCareer(testCreated, career, Float.parseFloat(t.hitRate()));
             testCareerRepository.save(newTestCareer);
         }
@@ -193,5 +190,32 @@ public class TestServiceImpl implements TestService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public List<TestHistorial> getTestHistorial(Long user_id){
+        List<Test> historialTest = testRepository.findByUserId(user_id);
+
+        List<TestHistorial> testHistorialList = new ArrayList<>();
+
+        for (Test test : historialTest) {
+            List<TestCareer> testCareerList = testCareerRepository.findByTestIdOrderByHitRateDesc(test.getId());
+            List<TestResource> prediction = new ArrayList<>();
+            for (TestCareer a : testCareerList) {
+                TestResource testResource = new TestResource(
+                    a.getCareer().getName(),
+                    a.getHitRate().toString()
+                );
+                prediction.add(testResource);
+            }
+            testHistorialList.add(new TestHistorial(
+                    prediction,
+                    test.getUser().getName() + ' ' + test.getUser().getLastName(),
+                    Period.between(test.getUser().getBirthdate(), LocalDate.from(test.getFechaRegistro())).getYears(),
+                    test.getFechaRegistro().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy HH:mm:ss")),
+                    test.getFlg_favorites()
+            ));
+        }
+        return testHistorialList;
     }
 }

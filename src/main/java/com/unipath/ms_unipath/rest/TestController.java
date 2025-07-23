@@ -2,6 +2,7 @@ package com.unipath.ms_unipath.rest;
 
 import com.unipath.ms_unipath.domain.services.TestService;
 import com.unipath.ms_unipath.repositories.TestRepository;
+import com.unipath.ms_unipath.rest.resources.test.TestHistorial;
 import com.unipath.ms_unipath.rest.resources.test.TestRequest;
 import com.unipath.ms_unipath.rest.resources.test.TestResource;
 import com.unipath.ms_unipath.rest.resources.test.TestResponse;
@@ -32,5 +33,12 @@ public class TestController {
         TestResponse testRespond = testService.getPredict(testResource,user_id);
 
         return new ResponseEntity<>(testRespond, HttpStatus.OK);
+    }
+
+    @GetMapping("/{user_id}")
+    ResponseEntity<List<TestHistorial>> getHistorialTest(@PathVariable Long user_id) {
+        List<TestHistorial> testHistorials = testService.getTestHistorial(user_id);
+
+        return new ResponseEntity<>(testHistorials, HttpStatus.OK);
     }
 }
