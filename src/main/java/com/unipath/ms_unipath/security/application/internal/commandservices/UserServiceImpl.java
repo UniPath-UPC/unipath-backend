@@ -73,7 +73,7 @@ public class UserServiceImpl implements UserService {
     public User updateUser(Long userId, UpdateUserResource resource){
         var foundedUser =  this.userRepository.findById(userId);
 
-        var updateUser = foundedUser.update(resource, hashingService.encode(resource.password()));
+        var updateUser = foundedUser.update(resource, foundedUser.getPassword());
 
         return userRepository.save(updateUser);
     }
