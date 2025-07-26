@@ -3,6 +3,7 @@ package com.unipath.ms_unipath.rest;
 import com.unipath.ms_unipath.domain.model.entities.University;
 import com.unipath.ms_unipath.rest.resources.university.UniversityResource;
 import com.unipath.ms_unipath.rest.resources.university.UpdateUniversityResource;
+import com.unipath.ms_unipath.rest.resources.user.UpdatePasswordResource;
 import com.unipath.ms_unipath.rest.resources.user.UpdateUserResource;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import com.unipath.ms_unipath.security.domain.services.UserService;

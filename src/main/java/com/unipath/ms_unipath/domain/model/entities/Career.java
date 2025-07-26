@@ -1,8 +1,6 @@
 package com.unipath.ms_unipath.domain.model.entities;
 
 import com.unipath.ms_unipath.rest.resources.career.CreateCareerResource;
-import com.unipath.ms_unipath.rest.resources.university.CreateUniversityResource;
-import com.unipath.ms_unipath.rest.resources.university.UpdateUniversityResource;
 import jakarta.persistence.*;
 import lombok.Getter;
 

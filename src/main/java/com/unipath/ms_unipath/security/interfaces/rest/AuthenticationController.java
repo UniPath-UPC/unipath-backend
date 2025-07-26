@@ -1,4 +1,5 @@
 package com.unipath.ms_unipath.security.interfaces.rest;
+import com.unipath.ms_unipath.rest.resources.user.UpdatePasswordResource;
 import com.unipath.ms_unipath.security.application.internal.outboundservices.tokens.TokenService;
 import com.unipath.ms_unipath.security.domain.services.UserService;
 import com.unipath.ms_unipath.security.interfaces.rest.resources.AuthenticatedUserResource;
@@ -55,6 +56,14 @@ public class AuthenticationController {
 
         var createUserResource = new SignInResource(user.get().getEmail(), token);
         return new ResponseEntity<>(createUserResource, HttpStatus.CREATED);
+    }
+
+    @PreAuthorize("permitAll()")
+    @PutMapping("/setPassword")
+    ResponseEntity<?> updatePassword (@RequestBody UpdatePasswordResource resource ) {
+        userService.updatePassword(resource.userId(), resource.newPassword());
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }

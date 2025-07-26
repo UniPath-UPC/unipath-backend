@@ -7,10 +7,11 @@ import com.unipath.ms_unipath.security.domain.model.entities.Role;
 import com.unipath.ms_unipath.security.interfaces.rest.resources.SignUpResource;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
-
+@Setter
 @Entity
 @Table(name = "\"users\"")
 @Getter

@@ -84,4 +84,13 @@ public class UserServiceImpl implements UserService {
 
         userRepository.delete(foundedUser);
     }
+
+    @Override
+    public void updatePassword(Long userId, String newPassword){
+        var foundedUser =  this.userRepository.findById(userId);
+
+        foundedUser.setPassword(hashingService.encode(newPassword));
+
+        userRepository.save(foundedUser);
+    }
 }
