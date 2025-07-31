@@ -4,11 +4,13 @@ import com.unipath.ms_unipath.rest.resources.test.CreateTestResource;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+@Setter
 @Entity
 @Table(name = "test")
 public class Test {

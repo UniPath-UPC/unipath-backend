@@ -209,6 +209,7 @@ public class TestServiceImpl implements TestService {
                 prediction.add(testResource);
             }
             testHistorialList.add(new TestHistorial(
+                    test.getId(),
                     prediction,
                     test.getUser().getName() + ' ' + test.getUser().getLastName(),
                     Period.between(test.getUser().getBirthdate(), LocalDate.from(test.getFechaRegistro())).getYears(),
@@ -217,5 +218,18 @@ public class TestServiceImpl implements TestService {
             ));
         }
         return testHistorialList;
+    }
+
+    @Override
+    public void changeFavorite (Long test_id){
+        Test test = testRepository.findById(test_id)
+                .orElseThrow(() -> new NoSuchElementException("Test con ID " + test_id + " no encontrado"));
+
+        if (test.getFlg_favorites() == 1){
+            test.setFlg_favorites(0);
+        }
+        else test.setFlg_favorites(1);
+
+        testRepository.save(test);
     }
 }

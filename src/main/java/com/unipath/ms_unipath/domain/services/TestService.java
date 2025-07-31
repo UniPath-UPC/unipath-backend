@@ -10,4 +10,5 @@ public interface TestService {
     String evaluateChaside (List<AnswerChasideDetailDTO> chasideDetails);
     List<TestResource> externalApiCall (CreateTestResource resource);
     List<TestHistorial> getTestHistorial(Long user_id);
+    void changeFavorite (Long test_id);
 }

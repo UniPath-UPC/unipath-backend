@@ -41,4 +41,11 @@ public class TestController {
 
         return new ResponseEntity<>(testHistorials, HttpStatus.OK);
     }
+
+    @PutMapping("/{test_id}")
+    ResponseEntity<?> changeFavorite(@PathVariable Long test_id) {
+        testService.changeFavorite(test_id);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

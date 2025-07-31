@@ -10,6 +10,8 @@ import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import com.unipath.ms_unipath.security.infrastructure.persistence.jpa.repositories.UserRepository;
 import com.unipath.ms_unipath.shared.domain.exceptions.AuthenticatedException;
 import com.unipath.ms_unipath.shared.domain.exceptions.NotFoundException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 @Service
 public class RequestServiceImpls implements RequestService {
@@ -46,13 +49,39 @@ public class RequestServiceImpls implements RequestService {
         Random random = new Random();
         int numeroAleatorio = 100000 + random.nextInt(900000);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Código de verificación");
-        message.setText("Tu código de verificación es: " + numeroAleatorio);
-        mailSender.send(message);
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
 
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(email);
+            helper.setSubject("Código de verificación");
 
+            String htmlContent = """
+                <html>
+                  <body style="font-family: Arial, sans-serif; color: #333;">
+                    <h2 style="color: #4CAF50;">¡Hola!</h2>
+                    <p>Tu código de verificación es:</p>
+                    <div style="font-size: 28px; font-weight: bold; color: #2196F3; margin: 15px 0;">%s</div>
+                    <p>Por favor, ingrésalo en el sistema para continuar con el proceso.</p>
+                    <br>
+                    <p style="font-size: 12px; color: #999;">Este código expirará en 10 minutos.</p>
+                  </body>
+                </html>
+                """.formatted(numeroAleatorio);
+
+            helper.setText(htmlContent, true); // true para indicar que es HTML
+            mailSender.send(mimeMessage);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Error al enviar el correo", e);
+        }
+
+        //SimpleMailMessage message = new SimpleMailMessage();
+        //message.setTo(email);
+        //message.setSubject("Código de verificación");
+        //message.setText("Tu código de verificación es: " + numeroAleatorio);
+        //mailSender.send(message);
+        
         Request newRequest = new Request(
                 user,
                 hashingService.encode(String.valueOf(numeroAleatorio)),
