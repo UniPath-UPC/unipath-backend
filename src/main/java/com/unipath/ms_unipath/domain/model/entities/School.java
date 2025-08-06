@@ -1,8 +1,13 @@
 package com.unipath.ms_unipath.domain.model.entities;
 
+import com.unipath.ms_unipath.rest.resources.school.CreateSchoolResource;
+import com.unipath.ms_unipath.security.domain.model.aggregates.User;
+import com.unipath.ms_unipath.security.domain.model.entities.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
+@Setter
 @Getter
 @Entity
 @Table(name = "school")
@@ -21,6 +26,7 @@ public class School {
     @Column(name = "schoolUrl", nullable = false)
     private String schoolUrl;
 
+
     public School() {
     }
 
@@ -35,5 +41,11 @@ public class School {
         this.name = name;
         this.imageUrl = imageUrl;
         this.schoolUrl = schoolUrl;
+    }
+
+    public School(CreateSchoolResource resource) {
+        this.name = resource.name();
+        this.imageUrl = resource.imageUrl();
+        this.schoolUrl = resource.schoolUrl();
     }
 }

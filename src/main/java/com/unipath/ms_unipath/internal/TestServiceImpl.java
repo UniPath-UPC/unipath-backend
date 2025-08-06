@@ -1,20 +1,28 @@
 package com.unipath.ms_unipath.internal;
 
 import com.unipath.ms_unipath.domain.model.entities.Career;
+import com.unipath.ms_unipath.domain.model.entities.School;
 import com.unipath.ms_unipath.domain.model.entities.Test;
 import com.unipath.ms_unipath.domain.model.entities.TestCareer;
 import com.unipath.ms_unipath.domain.services.TestService;
 import com.unipath.ms_unipath.repositories.CareerRepository;
+import com.unipath.ms_unipath.repositories.SchoolRepository;
 import com.unipath.ms_unipath.repositories.TestCareerRepository;
 import com.unipath.ms_unipath.repositories.TestRepository;
 import com.unipath.ms_unipath.rest.resources.DTOs.AnswerChasideDetailDTO;
 import com.unipath.ms_unipath.rest.resources.test.*;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
+import com.unipath.ms_unipath.security.domain.model.entities.Role;
+import com.unipath.ms_unipath.security.infrastructure.persistence.jpa.repositories.RoleRepository;
 import com.unipath.ms_unipath.security.infrastructure.persistence.jpa.repositories.UserRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,6 +35,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class TestServiceImpl implements TestService {
+    private final SchoolRepository schoolRepository;
+    private final RoleRepository roleRepository;
     @Value("${external.api.url}")
     private String externalApiUrl;
 
@@ -35,14 +45,18 @@ public class TestServiceImpl implements TestService {
     private final UserRepository userRepository;
     private final CareerRepository careerRepository;
     private final TestCareerRepository testCareerRepository;
+    private final JavaMailSender mailSender;
 
     @Autowired
-    public TestServiceImpl(RestTemplate restTemplate, TestRepository testRepository, UserRepository userRepository, CareerRepository careerRepository, TestCareerRepository testCareerRepository) {
+    public TestServiceImpl(RestTemplate restTemplate, TestRepository testRepository, UserRepository userRepository, CareerRepository careerRepository, TestCareerRepository testCareerRepository, JavaMailSender mailSender, SchoolRepository schoolRepository, RoleRepository roleRepository) {
         this.restTemplate = restTemplate;
         this.testRepository = testRepository;
         this.userRepository = userRepository;
         this.careerRepository = careerRepository;
         this.testCareerRepository = testCareerRepository;
+        this.mailSender = mailSender;
+        this.schoolRepository = schoolRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -96,6 +110,230 @@ public class TestServiceImpl implements TestService {
                 Period.between(user.getBirthdate(), LocalDate.from(fechaHoraActual)).getYears(),
                 testCreated.getFechaRegistro().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy HH:mm:ss"))
         );
+
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+
+        Long countTestSchool = testRepository.countBySchoolId(user.getSchool().getId());
+        School school = schoolRepository.findById(user.getSchool().getId())
+                .orElseThrow(() -> new NoSuchElementException("School con ID " + user.getSchool().getId() + " no encontrado"));
+        Role role_director = roleRepository.findByName("ROLE_DIRECTOR")
+                .orElseThrow(() -> new NoSuchElementException("Role con NAME ROLE_DIRECTOR no encontrado"));
+        Role role_docente = roleRepository.findByName("ROLE_DOCENTE")
+                .orElseThrow(() -> new NoSuchElementException("Role con NAME ROLE_DOCENTE no encontrado"));
+
+        User director = userRepository.findBySchoolAndRole(school, role_director);
+        User docente = userRepository.findBySchoolAndRole(school, role_docente);
+
+        if(countTestSchool % 2 == 0){
+            try {
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                helper.setTo(director.getEmail());
+                helper.setSubject("Alcance de recomendaciones realizadas!!");
+
+                String htmlContent = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta charset='UTF-8'>
+                      <style>
+                        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+                        .container { background-color: #ffffff; border-radius: 8px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+                        .header { text-align: center; color: #2c3e50; }
+                        .info { margin-bottom: 20px; }
+                        .info strong { color: #333; }
+                        .summary { background-color: #e3f2fd; border-left: 5px solid #2196f3; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+                        .summary h4 { margin: 0; color: #1565c0; }
+                        .summary p { margin: 5px 0 0 0; color: #444; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class='container'>
+                        <div class='header'>
+                          <h2>Resumen de Actividad Reciente</h2>
+                        </div>
+                
+                        <div class='info'>
+                          <p><strong>Colegio:</strong> %s</p>
+                          <p><strong>Fecha:</strong> %s</p>
+                        </div>
+                
+                        <div class='summary'>
+                          <h4>Pruebas Realizadas</h4>
+                          <p>Se han realizado un total de <strong>%d</strong> pruebas vocacionales en su institución.</p>
+                        </div>
+                
+                        <div class='info'>
+                          <p>Para revisar los resultados, puede acceder a nuestra plataforma web.</p>
+                          <p>Si tiene alguna duda, no dude en contactarnos.</p>
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                    """;
+
+                String renderedHtml = String.format(
+                        htmlContent,
+                        school.getName(),          // Colegio
+                        LocalDate.now(),     // Fecha
+                        countTestSchool           // Cantidad de pruebas
+                );
+
+                helper.setText(renderedHtml, true);
+
+                mailSender.send(mimeMessage);
+
+            } catch (MessagingException e) {
+                throw new RuntimeException("Error al enviar el correo", e);
+            }
+        }
+
+        if(Float.parseFloat(response.getFirst().hitRate()) < 45.00){
+            try {
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                helper.setTo(docente.getEmail());
+                helper.setSubject("Recomendacion con precision baja - Alumno " + user.getName() + ' ' + user.getLastName() );
+
+                String htmlContent = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta charset='UTF-8'>
+                      <style>
+                        body {
+                          font-family: Arial, sans-serif;
+                          background-color: #f4f4f4;
+                          margin: 0;
+                          padding: 0;
+                        }
+                        .container {
+                          max-width: 600px;
+                          margin: 30px auto;
+                          background-color: #ffffff;
+                          padding: 24px;
+                          border-radius: 8px;
+                          box-shadow: 0 0 10px rgba(0,0,0,0.08);
+                        }
+                        h2 {
+                          color: #d32f2f; /* rojo para advertencia */
+                          margin-top: 0;
+                        }
+                        p {
+                          color: #333333;
+                          line-height: 1.6;
+                        }
+                        .info-box {
+                          background-color: #e3f2fd;
+                          border-left: 5px solid #2196f3;
+                          padding: 12px 16px;
+                          margin: 20px 0;
+                          border-radius: 4px;
+                        }
+                        .footer {
+                          font-size: 12px;
+                          color: #777777;
+                          margin-top: 32px;
+                          text-align: center;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <div class='container'>
+                        <h2>Advertencia de Precisión Baja</h2>
+                    
+                        <p>Estimado/a docente,</p>
+                    
+                        <p>Le informamos que el siguiente alumno ha obtenido una <strong>precisión baja</strong> en el modelo de recomendación vocacional. Esto podría indicar una falta de claridad en sus respuestas o una necesidad de orientación adicional.</p>
+                    
+                        <div class='info-box'>
+                          <p><strong>Nombre del alumno:</strong> %s</p>
+                          <p><strong>Precisión del modelo:</strong> %s%%</p>
+                          <p><strong>Fecha de recomendación:</strong> %s</p>
+                        </div>
+                    
+                        <p>Se recomienda brindar acompañamiento académico o realizar una nueva evaluación con el alumno.</p>
+                    
+                        <p class='footer'>Este mensaje fue generado automáticamente por el sistema de orientación vocacional. Para más información, contacte al área responsable.</p>
+                      </div>
+                    </body>
+                    </html>
+                    """.formatted(user.getName() + ' ' + user.getLastName(), response.getFirst().hitRate(), testCreated.getFechaRegistro().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy HH:mm:ss")));
+
+                helper.setText(htmlContent, true); // true para indicar que es HTML
+                mailSender.send(mimeMessage);
+
+            } catch (MessagingException e) {
+                throw new RuntimeException("Error al enviar el correo", e);
+            }
+        }
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(user.getEmail());
+            helper.setSubject("Recomendacion lista!!!");
+
+            String htmlContent = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset='UTF-8'>
+                  <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+                    .container { background-color: #ffffff; border-radius: 8px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+                    .header { text-align: center; color: #2c3e50; }
+                    .info { margin-bottom: 20px; }
+                    .info strong { color: #333; }
+                    .career { background-color: #e8f5e9; border-left: 5px solid #4caf50; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+                    .career h4 { margin: 0; color: #2e7d32; }
+                    .career p { margin: 5px 0 0 0; color: #444; }
+                  </style>
+                </head>
+                <body>
+                  <div class='container'>
+                    <div class='header'>
+                      <h2>Resumen de Resultados del Test Vocacional</h2>
+                    </div>
+                
+                    <div class='info'>
+                      <p><strong>Usuario:</strong> %s</p>
+                      <p><strong>Edad:</strong> %d años</p>
+                      <p><strong>Fecha de Registro:</strong> %s</p>
+                    </div>
+                
+                    <div>
+                      <h3>Carreras recomendadas:</h3>
+                      %s
+                    </div>
+                  </div>
+                </body>
+                </html>
+                """;
+
+            StringBuilder careerHtml = new StringBuilder();
+            for (TestResource career : response) {
+                careerHtml.append(String.format("""
+                  <div class='career'>
+                    <h4>%s</h4>
+                    <p>Índice de coincidencia: %s%%</p>
+                  </div>
+                """, career.nameCareer(), career.hitRate()));
+            }
+
+            String renderedHtml = String.format(
+                    htmlContent,
+                    testResponse.username(),
+                    testResponse.age(),
+                    testResponse.fechaRegistro(),
+                    careerHtml.toString()
+            );
+
+            helper.setText(renderedHtml, true); // true para indicar que es HTML
+            mailSender.send(mimeMessage);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Error al enviar el correo", e);
+        }
+
+
         return testResponse;
     }
 

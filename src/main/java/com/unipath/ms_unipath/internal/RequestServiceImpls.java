@@ -57,15 +57,46 @@ public class RequestServiceImpls implements RequestService {
             helper.setSubject("Código de verificación");
 
             String htmlContent = """
+                <!DOCTYPE html>
                 <html>
-                  <body style="font-family: Arial, sans-serif; color: #333;">
-                    <h2 style="color: #4CAF50;">¡Hola!</h2>
-                    <p>Tu código de verificación es:</p>
-                    <div style="font-size: 28px; font-weight: bold; color: #2196F3; margin: 15px 0;">%s</div>
-                    <p>Por favor, ingrésalo en el sistema para continuar con el proceso.</p>
-                    <br>
-                    <p style="font-size: 12px; color: #999;">Este código expirará en 10 minutos.</p>
-                  </body>
+                <head>
+                  <meta charset='UTF-8'>
+                  <style>
+                    /* --- Reset básico para e-mails --- */
+                    body, table, td, a { font-family: Arial, sans-serif; }
+                    body { margin:0; padding:0; background:#f4f4f4; }
+                    .container {
+                      max-width:600px; margin:0 auto; background:#ffffff;
+                      padding:24px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.08);
+                    }
+                    h2 { color:#2c3e50; margin-top:0; }
+                    .code-box {
+                      font-size:32px; font-weight:bold; color:#2196f3;
+                      letter-spacing:4px; border:2px dashed #2196f3;
+                      padding:12px 24px; border-radius:6px; display:inline-block;
+                      background:#e3f2fd; margin:20px 0;
+                    }
+                    p { color:#333; line-height:1.5em; }
+                    .footer { font-size:12px; color:#777; margin-top:32px; }
+                  </style>
+                </head>
+                <body>
+                  <div class='container'>
+                    <h2>¡Hola!</h2>
+                    <p>Hemos recibido una solicitud para verificar tu identidad.</p>
+                
+                    <p>Introduce el siguiente código en el sistema para continuar:</p>
+                
+                    <div class='code-box'>%s</div>
+                
+                    <p>Si no solicitaste este código, ignora este mensaje.</p>
+                
+                    <p class='footer'>
+                      Este código expirará en <strong>10&nbsp;minutos</strong>.<br>
+                      © 2025 Tu Compañía – Todos los derechos reservados
+                    </p>
+                  </div>
+                </body>
                 </html>
                 """.formatted(numeroAleatorio);
 

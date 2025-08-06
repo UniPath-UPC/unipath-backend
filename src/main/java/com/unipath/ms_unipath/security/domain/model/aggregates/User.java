@@ -1,5 +1,6 @@
 package com.unipath.ms_unipath.security.domain.model.aggregates;
 
+import com.unipath.ms_unipath.domain.model.entities.School;
 import com.unipath.ms_unipath.domain.model.entities.University;
 import com.unipath.ms_unipath.rest.resources.university.UpdateUniversityResource;
 import com.unipath.ms_unipath.rest.resources.user.UpdateUserResource;
@@ -32,17 +33,19 @@ public class User {
     private String email;
     @Column(nullable = false)
     private String password;
-    @Column(nullable = false)
-    private String school;
 
     @ManyToOne
     @JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false)
     private Role role;
 
+    @ManyToOne
+    @JoinColumn(name = "school_id", referencedColumnName = "id", nullable = false)
+    private School school;
+
     public User() {
     }
 
-    public User(Long id, String name, String lastName, LocalDate birthdate, String email, String password, Role role, String school) {
+    public User(Long id, String name, String lastName, LocalDate birthdate, String email, String password, Role role, School school) {
         this.id = id;
         this.name = name;
         this.lastName = lastName;
@@ -53,23 +56,23 @@ public class User {
         this.school = school;
     }
 
-    public User(SignUpResource command, Role role, String password) {
+    public User(SignUpResource command, Role role, String password, School school) {
         this.name = command.name();
         this.lastName = command.lastName();
         this.birthdate = command.birthdate();
         this.email = command.email();
         this.password = password;
-        this.school = command.school();
+        this.school = school;
         this.role = role;
     }
 
-    public User update (UpdateUserResource resource, String password) {
+    public User update (UpdateUserResource resource, String password, School school) {
         this.name = resource.name();
         this.lastName = resource.lastName();
         this.birthdate = resource.birthdate();
         this.email = resource.email();
         this.password = password;
-        this.school = resource.school();
+        this.school = school;
 
         return this;
     }

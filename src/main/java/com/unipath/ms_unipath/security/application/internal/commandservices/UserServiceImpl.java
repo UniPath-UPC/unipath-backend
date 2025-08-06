@@ -1,5 +1,6 @@
 package com.unipath.ms_unipath.security.application.internal.commandservices;
 
+import com.unipath.ms_unipath.repositories.SchoolRepository;
 import com.unipath.ms_unipath.rest.resources.user.UpdateUserResource;
 import com.unipath.ms_unipath.security.application.internal.outboundservices.hashing.HashingService;
 import com.unipath.ms_unipath.security.domain.model.aggregates.User;
@@ -25,11 +26,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final HashingService hashingService;
+    private final SchoolRepository schoolRepository;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, HashingService hashingService) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, HashingService hashingService, SchoolRepository schoolRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.hashingService = hashingService;
+        this.schoolRepository = schoolRepository;
     }
 
 
@@ -54,9 +57,14 @@ public class UserServiceImpl implements UserService {
 
         var role = roleRepository.findByName(resource.role())
                 .orElseThrow(() -> new NotFoundException("Not found a role with this name"));
+        var school = schoolRepository.findById(resource.school_id())
+                .orElseThrow(() -> new NotFoundException("Not found a school with this id"));
+
+        if (userRepository.existsBySchoolAndRole(school, role) && role.getId() != 2)
+            throw new BadRequestException("Already exist a " + role.getName()+ " in " + school.getName());
 
         try {
-            var user = new User(resource, role, hashingService.encode(resource.password()));
+            var user = new User(resource, role, hashingService.encode(resource.password()), school);
             return Optional.of(userRepository.save(user));
         } catch (Exception e) {
             throw new ServerErrorException();
@@ -73,7 +81,7 @@ public class UserServiceImpl implements UserService {
     public User updateUser(Long userId, UpdateUserResource resource){
         var foundedUser =  this.userRepository.findById(userId);
 
-        var updateUser = foundedUser.update(resource, foundedUser.getPassword());
+        var updateUser = foundedUser.update(resource, foundedUser.getPassword(), foundedUser.getSchool());
 
         return userRepository.save(updateUser);
     }
