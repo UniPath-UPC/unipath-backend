@@ -2,10 +2,7 @@ package com.unipath.ms_unipath.rest;
 
 import com.unipath.ms_unipath.domain.services.TestService;
 import com.unipath.ms_unipath.repositories.TestRepository;
-import com.unipath.ms_unipath.rest.resources.test.TestHistorial;
-import com.unipath.ms_unipath.rest.resources.test.TestRequest;
-import com.unipath.ms_unipath.rest.resources.test.TestResource;
-import com.unipath.ms_unipath.rest.resources.test.TestResponse;
+import com.unipath.ms_unipath.rest.resources.test.*;
 import com.unipath.ms_unipath.rest.resources.university.UniversityResource;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -40,6 +37,20 @@ public class TestController {
         List<TestHistorial> testHistorials = testService.getTestHistorial(user_id);
 
         return new ResponseEntity<>(testHistorials, HttpStatus.OK);
+    }
+
+    @GetMapping("/list_test_docente/{user_id}")
+    ResponseEntity<List<TestHistorialDocente>> getHistorialTestForDocente(@PathVariable Long user_id) {
+        List<TestHistorialDocente> testHistorialsDocente = testService.getTestHistorialDocente(user_id);
+
+        return new ResponseEntity<>(testHistorialsDocente, HttpStatus.OK);
+    }
+
+    @GetMapping("/reports_info/{user_id}")
+    ResponseEntity<List<TotalTestForReports>> getInfoForReports(@PathVariable Long user_id) {
+        List<TotalTestForReports> listTestForReports = testService.getTestforReports(user_id);
+
+        return new ResponseEntity<>(listTestForReports, HttpStatus.OK);
     }
 
     @PutMapping("/{test_id}")

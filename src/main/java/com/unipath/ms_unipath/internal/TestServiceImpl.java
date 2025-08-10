@@ -431,6 +431,75 @@ public class TestServiceImpl implements TestService {
     }
 
     @Override
+    public List<TotalTestForReports> getTestforReports(Long user_id){
+        User userRequester = userRepository.findById(user_id);
+
+        List<User> listUserStudents = userRepository.findBySchool(userRequester.getSchool());
+
+        List<TotalTestForReports> listTotalTestForReports = new ArrayList<>();
+
+        for (User user : listUserStudents) {
+            List<Test> testListForUser = testRepository.findByUserId(user.getId());
+            for (Test test : testListForUser) {
+                List<TestCareer> testCareerListForUser = testCareerRepository.findByTestIdOrderByHitRateDesc(test.getId());
+                for (TestCareer testCareer : testCareerListForUser) {
+                    listTotalTestForReports.add(new TotalTestForReports(
+                            user.getId(),
+                            user.getName() + ' ' + user.getLastName(),
+                            test.getId(),
+                            test.getArea(),
+                            test.getArea(),
+                            test.getFechaRegistro(),
+                            test.getFlg_favorites(),
+                            test.getGenre(),
+                            testCareer.getHitRate(),
+                            testCareer.getCareer().getId(),
+                            testCareer.getCareer().getName()
+                            )
+                    );
+                }
+            }
+        }
+        return listTotalTestForReports;
+    }
+
+    @Override
+    public List<TestHistorialDocente> getTestHistorialDocente(Long user_id){
+        User docente = userRepository.findById(user_id);
+
+        List<User> listUserStudents = userRepository.findBySchool(docente.getSchool());
+
+        List<TestHistorialDocente> listTestHistorialDocente = new ArrayList<>();
+
+        for (User user : listUserStudents) {
+            List<Test> testListForUser = testRepository.findByUserId(user.getId());
+            for (Test test : testListForUser) {
+                List<TestCareer> testCareerListForUser = testCareerRepository.findByTestIdOrderByHitRateDesc(test.getId());
+                List<TestResource> prediction = new ArrayList<>();
+                for (TestCareer a : testCareerListForUser) {
+                    TestResource testResource = new TestResource(
+                            a.getCareer().getName(),
+                            a.getHitRate().toString()
+                    );
+                    prediction.add(testResource);
+                }
+                listTestHistorialDocente.add(new TestHistorialDocente(
+                        test.getId(),
+                        prediction,
+                        user.getId(),
+                        test.getUser().getName() + ' ' + test.getUser().getLastName(),
+                        Period.between(test.getUser().getBirthdate(), LocalDate.from(test.getFechaRegistro())).getYears(),
+                        test.getFechaRegistro().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy HH:mm:ss")),
+                        test.getFlg_favorites(),
+                        test.getArea()
+                ));
+            }
+        }
+
+        return listTestHistorialDocente;
+    }
+
+    @Override
     public List<TestHistorial> getTestHistorial(Long user_id){
         List<Test> historialTest = testRepository.findByUserId(user_id);
 

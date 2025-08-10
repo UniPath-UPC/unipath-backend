@@ -11,4 +11,6 @@ public interface TestService {
     List<TestResource> externalApiCall (CreateTestResource resource);
     List<TestHistorial> getTestHistorial(Long user_id);
     void changeFavorite (Long test_id);
+    List<TestHistorialDocente> getTestHistorialDocente(Long user_id);
+    List<TotalTestForReports> getTestforReports(Long user_id);
 }
