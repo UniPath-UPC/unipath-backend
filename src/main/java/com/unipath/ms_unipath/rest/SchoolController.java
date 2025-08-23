@@ -5,6 +5,7 @@ import com.unipath.ms_unipath.domain.services.SchoolService;
 import com.unipath.ms_unipath.rest.resources.school.CreateSchoolResource;
 import com.unipath.ms_unipath.rest.resources.school.SchoolsResponse;
 import com.unipath.ms_unipath.rest.resources.university.UniversityResource;
+import com.unipath.ms_unipath.security.domain.model.aggregates.User;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,5 +41,12 @@ public class SchoolController {
         School school = schoolService.create(resource);
 
         return new ResponseEntity<>(school, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{schoolId}")
+    ResponseEntity<School> getSchool(@PathVariable Long schoolId) {
+        School school = schoolService.getSchool(schoolId);
+
+        return new ResponseEntity<>(school, HttpStatus.OK);
     }
 }

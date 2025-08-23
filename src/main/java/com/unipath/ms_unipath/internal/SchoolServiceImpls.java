@@ -5,6 +5,7 @@ import com.unipath.ms_unipath.domain.services.SchoolService;
 import com.unipath.ms_unipath.repositories.SchoolRepository;
 import com.unipath.ms_unipath.rest.resources.school.CreateSchoolResource;
 import com.unipath.ms_unipath.rest.resources.school.SchoolsResponse;
+import com.unipath.ms_unipath.shared.domain.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,5 +41,13 @@ public class SchoolServiceImpls implements SchoolService {
         }
 
         return schoolsResponses;
+    }
+
+    @Override
+    public School getSchool (Long id){
+        var school =  this.schoolRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Not found school with id: "+ id));
+
+        return school;
     }
 }

@@ -11,4 +11,5 @@ import java.util.List;
 public interface SchoolService {
     School create(CreateSchoolResource resource);
     List<SchoolsResponse> getAllSchools ();
+    School getSchool (Long id);
 }
