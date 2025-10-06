@@ -124,7 +124,7 @@ public class TestServiceImpl implements TestService {
         User director = userRepository.findBySchoolAndRole(school, role_director);
         User docente = userRepository.findBySchoolAndRole(school, role_docente);
 
-        if(countTestSchool % 2 == 0){
+        if(countTestSchool % 10 == 0){
             try {
                 MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
                 helper.setTo(director.getEmail());
